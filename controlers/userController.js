@@ -6,7 +6,7 @@ const express = require('express');
 
 
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email,phone, password } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -21,6 +21,7 @@ const register = async (req, res) => {
     const newUser = new User({
       name,
       email,
+      phone,
       password: hashedPassword,
       role: 'user',
     });
@@ -34,7 +35,7 @@ const register = async (req, res) => {
   }
 }
 const createNewUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email,phone, password, role } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -49,6 +50,7 @@ const createNewUser = async (req, res) => {
     const newUser = new User({
       name,
       email,
+      phone,
       password: hashedPassword,
       role
     });
@@ -105,7 +107,7 @@ const checkAdminRole = (req, res, next) => {
 const edit = async (req, res) => {
 
   const userId = req.params.id;
-  const { name, email, password } = req.body;
+  const { name, email,phone, password } = req.body;
 
   try {
     // Verificar si el usuario existe en la base de datos
@@ -117,6 +119,7 @@ const edit = async (req, res) => {
     // Actualizar los datos del usuario
     user.name = name;
     user.email = email;
+    user.phone = phone;
     user.password = password;
 
     if (password) {
