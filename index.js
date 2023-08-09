@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors'); // Importa el módulo cors
 const app = express();
-
+const jwt = require('jsonwebtoken');
 const port = 3001;
 const { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId } = require("./controlers/userController");
 const { Session } = require("./controlers/sessionController");
@@ -31,15 +31,21 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Ruta para registro y envío de correo de validación
 app.post('/sendEmail', async (req, res) => {
+  const { email } = req.body;
   try {
+    // Genera un token de validación
+    const token = jwt.sign({ email }, 'secreto-seguro', { expiresIn: '1h' }); // Personaliza el secreto y el tiempo de expiración
+    
+    // Crea la URL de validación
+    const validationUrl = `http://tu-aplicacion.com/validateEmail?token=${token}`;
 
-    // Enviar correo de validación
+    // Enviar correo de validación con la URL
     const msg = {
-      to: 'solanodiego2002@gmail.com',
+      to: email,
       from: 'ldsb20020611@gmail.com',
       subject: 'Validación de correo',
-      text: 'Su correo a sido validado con éxito.',
-      html: '<strong>Su correo a sido validado con éxito.</strong>',
+      text: `Por favor, haga clic en el siguiente enlace para validar su correo electrónico: ${validationUrl}`,
+      html: `<p>Por favor, haga clic en el siguiente enlace para validar su correo electrónico:</p><a href="${validationUrl}">Validar correo</a>`,
     };
 
     await sgMail.send(msg);
@@ -48,6 +54,22 @@ app.post('/sendEmail', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor.' });
+  }
+});
+
+// Ruta para manejar la validación del correo
+app.get('/validateEmail', (req, res) => {
+  const { token } = req.query;
+  try {
+    const decodedToken = jwt.verify(token, 'secreto-seguro'); // Verifica el token usando el mismo secreto
+
+    // Realiza acciones de validación, como actualizar el estado de validación en la base de datos
+    // ...
+
+    res.send('Correo electrónico validado correctamente.');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al validar el correo electrónico.');
   }
 });
 
