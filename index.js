@@ -10,7 +10,7 @@ const { Session } = require("./controlers/sessionController");
 //const {checkAdminRole, checkUserRole} = require ("./controlers/roleController");
 const { obtenerPrompts, createPrompts, editPrompts, deletePrompts, obtenerPromptsXId } = require("./controlers/promptsController");
 
-
+const User = require("../Proyecto-2-Server-ISW-711/models/userModel");
 
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
@@ -37,7 +37,8 @@ app.post('/sendEmail', async (req, res) => {
     const token = jwt.sign({ email }, 'secreto-seguro', { expiresIn: '1h' }); // Personaliza el secreto y el tiempo de expiración
     
     // Crea la URL de validación
-    const validationUrl = `http://tu-aplicacion.com/validateEmail?token=${token}`;
+    const validationUrl = `http://localhost:3000/validarEmail/${token}`;
+    console.log(validationUrl);
 
     // Enviar correo de validación con la URL
     const msg = {
@@ -58,13 +59,20 @@ app.post('/sendEmail', async (req, res) => {
 });
 
 // Ruta para manejar la validación del correo
-app.get('/validateEmail', (req, res) => {
+app.get('/validarEmail', async (req, res) => {
   const { token } = req.query;
   try {
     const decodedToken = jwt.verify(token, 'secreto-seguro'); // Verifica el token usando el mismo secreto
 
-    // Realiza acciones de validación, como actualizar el estado de validación en la base de datos
-    // ...
+    console.log(decodedToken);
+    const user = await User.findOne({email:decodedToken.email});
+    if (!user) {
+      return res.status(404).json({ error: 'El usuario no existe' });
+    }
+
+    // Actualizar los datos del usuario
+    user.estado = "Activa";
+    await user.save();
 
     res.send('Correo electrónico validado correctamente.');
   } catch (error) {

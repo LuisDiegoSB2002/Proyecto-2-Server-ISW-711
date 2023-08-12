@@ -24,6 +24,7 @@ const register = async (req, res) => {
       phone,
       password: hashedPassword,
       role: 'user',
+      estado: 'inactivo',
     });
 
     await newUser.save();
