@@ -92,7 +92,7 @@ app.get('/obtener', obtener);
 
 app.post('/login', login);
 
-app.put('/editUser/:id', edit);
+app.patch('/editUser/:id', edit);
 
 app.delete('/deleteUser/:id', Session, deleteUser);
 

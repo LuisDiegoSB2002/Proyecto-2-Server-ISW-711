@@ -36,7 +36,7 @@ const register = async (req, res) => {
   }
 }
 const createNewUser = async (req, res) => {
-  const { name, email,phone, password, role } = req.body;
+  const { name, email,phone, password, role, estado } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -53,7 +53,8 @@ const createNewUser = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role
+      role,
+      estado
     });
 
     await newUser.save();
@@ -108,7 +109,7 @@ const checkAdminRole = (req, res, next) => {
 const edit = async (req, res) => {
 
   const userId = req.params.id;
-  const { name, email,phone, password } = req.body;
+  const { name, email,phone, password, rol, estado } = req.body;
 
   try {
     // Verificar si el usuario existe en la base de datos
@@ -122,6 +123,8 @@ const edit = async (req, res) => {
     user.email = email;
     user.phone = phone;
     user.password = password;
+    user.rol = rol;
+    user.estado = estado;
 
     if (password) {
       // Si se proporciona una nueva contraseña, encriptarla y guardarla
