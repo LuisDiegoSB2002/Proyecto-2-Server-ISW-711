@@ -13,7 +13,15 @@ const { obtenerPrompts, createPrompts, editPrompts, deletePrompts, obtenerPrompt
 const User = require("../Proyecto-2-Server-ISW-711/models/userModel");
 
 const sgMail = require('@sendgrid/mail');
+
 require('dotenv').config();
+const accountSid = process.env.TU_ACCOUNT_SID;
+const authToken = process.env.TU_AUTH_TOKEN;
+const verifySid = process.env.TU_VERIFY_SERVICE_SID;
+
+const client = require('twilio')(accountSid, authToken);
+
+
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/proyecto', {
@@ -80,6 +88,48 @@ app.get('/validarEmail', async (req, res) => {
     res.status(500).send('Error al validar el correo electrónico.');
   }
 });
+
+
+
+app.post('/sendVerificationCode', async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  try {
+    // Enviar el código de verificación por SMS utilizando v2 de Twilio
+    const verification = await client.verify.services(verifySid).verifications.create({
+      to: "+50670982247",
+      channel: 'sms'
+    });
+
+    console.log(verification.status); // Imprimir el estado de la verificación (puede ser "pending" o "approved")
+
+    res.status(201).json({ message: 'Código de verificación enviado.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor.' });
+  }
+});
+
+
+app.post('/verifyCode', async (req, res) => {
+  const { phoneNumber, code } = req.body;
+
+  try {
+    // Verificar el código ingresado por el usuario
+    const verificationCheck = await client.verify.services(verifySid).verificationChecks.create({
+      to: phoneNumber,
+      code: code
+    });
+
+    console.log(verificationCheck.status); // Imprimir el estado de la verificación (puede ser "approved" o "pending")
+
+    res.status(200).json({ message: 'Verificación exitosa.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor.' });
+  }
+});
+
 
 
 app.use(express.json());

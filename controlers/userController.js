@@ -82,13 +82,14 @@ const login = async (req, res) => {
     }
 
     // Generar un token JWT con la información del usuario
-    const token = jwt.sign({ userId: user._id, role: user.role }, secretKey);
+    const token = jwt.sign({ userId: user._id, role: user.role, phone:user.phone }, secretKey);
 
     res.json({
       message: "Validacón completada....",
       token: token,
       name: user.name,
-      role: user.role
+      role: user.role,
+      phone: user.phone
 
     });
 
