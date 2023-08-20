@@ -46,7 +46,7 @@ app.post('/sendEmail', async (req, res) => {
     
     // Crea la URL de validación
     const validationUrl = `http://localhost:3000/validarEmail/${token}`;
-    console.log(validationUrl);
+    
 
     // Enviar correo de validación con la URL
     const msg = {
@@ -72,7 +72,7 @@ app.get('/validarEmail', async (req, res) => {
   try {
     const decodedToken = jwt.verify(token, 'secreto-seguro'); // Verifica el token usando el mismo secreto
 
-    console.log(decodedToken);
+    
     const user = await User.findOne({email:decodedToken.email});
     if (!user) {
       return res.status(404).json({ error: 'El usuario no existe' });
@@ -93,13 +93,14 @@ app.get('/validarEmail', async (req, res) => {
 
 app.post('/sendVerificationCode', async (req, res) => {
   const { phoneNumber } = req.body;
-
+  
   try {
     // Enviar el código de verificación por SMS utilizando v2 de Twilio
     const verification = await client.verify.services(verifySid).verifications.create({
-      to: "+50670982247",
+      to: phoneNumber,
       channel: 'sms'
     });
+    
 
     console.log(verification.status); // Imprimir el estado de la verificación (puede ser "pending" o "approved")
 
@@ -113,9 +114,9 @@ app.post('/sendVerificationCode', async (req, res) => {
 
 app.post('/verifyCode', async (req, res) => {
   const { phoneNumber, code } = req.body;
-
+  console.log("ENTRÉ telefono: "+ phoneNumber+ "  code: "+ code);
   try {
-    // Verificar el código ingresado por el usuario
+    // Verificar el código de verificación ingresado por el usuario
     const verificationCheck = await client.verify.services(verifySid).verificationChecks.create({
       to: phoneNumber,
       code: code
@@ -123,12 +124,17 @@ app.post('/verifyCode', async (req, res) => {
 
     console.log(verificationCheck.status); // Imprimir el estado de la verificación (puede ser "approved" o "pending")
 
-    res.status(200).json({ message: 'Verificación exitosa.' });
+    if (verificationCheck.status === 'approved') {
+      res.status(200).json({ message: 'Verificación exitosa.' });
+    } else {
+      res.status(400).json({ message: 'Código de verificación incorrecto.' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor.' });
   }
 });
+
 
 
 
