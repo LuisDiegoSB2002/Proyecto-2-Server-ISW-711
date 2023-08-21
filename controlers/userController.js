@@ -25,6 +25,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       role: 'user',
       estado: 'inactivo',
+      validacion: 'Activa',
     });
 
     await newUser.save();
@@ -36,7 +37,7 @@ const register = async (req, res) => {
   }
 }
 const createNewUser = async (req, res) => {
-  const { name, email,phone, password, role, estado } = req.body;
+  const { name, email,phone, password, role, estado, validacion } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -54,7 +55,8 @@ const createNewUser = async (req, res) => {
       phone,
       password: hashedPassword,
       role,
-      estado
+      estado,
+      validacion
     });
 
     await newUser.save();
@@ -82,14 +84,16 @@ const login = async (req, res) => {
     }
 
     // Generar un token JWT con la información del usuario
-    const token = jwt.sign({ userId: user._id, role: user.role, phone: user.phone }, secretKey);
+    const token = jwt.sign({ userId: user._id, role: user.role, phone: user.phone, validacion: user.validacion }, secretKey);
 
     res.json({
       message: "Validacón completada....",
       token: token,
+      userId: user._id,
       name: user.name,
       role: user.role,
-      phone: user.phone
+      phone: user.phone,
+      validacion: user.validacion
 
     });
 
@@ -141,6 +145,33 @@ const edit = async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar el usuario' });
   }
 }
+const editProfile = async (req, res) => {
+
+  const userId = req.params.id;
+  const { name, email, phone} = req.body;
+  console.log("datos nuevos: "+name, email, phone);
+
+  try {
+    // Verificar si el usuario existe en la base de datos
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'El usuario no existe' });
+    }
+
+    // Actualizar los datos del usuario
+    user.name = name;
+    user.email = email;
+    user.phone = phone;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Usuario actualizado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el usuario' });
+  }
+}
+
 const deleteUser = async (req, res) => {
   const userId = req.params.id;
 
@@ -194,4 +225,4 @@ const obtenerXId = async (req, res) => {
 
 
 }
-module.exports = { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId };
+module.exports = { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile };

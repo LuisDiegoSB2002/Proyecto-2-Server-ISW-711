@@ -5,7 +5,7 @@ const cors = require('cors'); // Importa el módulo cors
 const app = express();
 const jwt = require('jsonwebtoken');
 const port = 3001;
-const { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId } = require("./controlers/userController");
+const { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile } = require("./controlers/userController");
 const { Session } = require("./controlers/sessionController");
 //const {checkAdminRole, checkUserRole} = require ("./controlers/roleController");
 const { obtenerPrompts, createPrompts, editPrompts, deletePrompts, obtenerPromptsXId } = require("./controlers/promptsController");
@@ -43,10 +43,10 @@ app.post('/sendEmail', async (req, res) => {
   try {
     // Genera un token de validación
     const token = jwt.sign({ email }, 'secreto-seguro', { expiresIn: '1h' }); // Personaliza el secreto y el tiempo de expiración
-    
+
     // Crea la URL de validación
     const validationUrl = `http://localhost:3000/validarEmail/${token}`;
-    
+
 
     // Enviar correo de validación con la URL
     const msg = {
@@ -72,8 +72,8 @@ app.get('/validarEmail', async (req, res) => {
   try {
     const decodedToken = jwt.verify(token, 'secreto-seguro'); // Verifica el token usando el mismo secreto
 
-    
-    const user = await User.findOne({email:decodedToken.email});
+
+    const user = await User.findOne({ email: decodedToken.email });
     if (!user) {
       return res.status(404).json({ error: 'El usuario no existe' });
     }
@@ -93,14 +93,14 @@ app.get('/validarEmail', async (req, res) => {
 
 app.post('/sendVerificationCode', async (req, res) => {
   const { phoneNumber } = req.body;
-  
+
   try {
     // Enviar el código de verificación por SMS utilizando v2 de Twilio
     const verification = await client.verify.services(verifySid).verifications.create({
       to: phoneNumber,
       channel: 'sms'
     });
-    
+
 
     console.log(verification.status); // Imprimir el estado de la verificación (puede ser "pending" o "approved")
 
@@ -114,7 +114,7 @@ app.post('/sendVerificationCode', async (req, res) => {
 
 app.post('/verifyCode', async (req, res) => {
   const { phoneNumber, code } = req.body;
-  console.log("ENTRÉ telefono: "+ phoneNumber+ "  code: "+ code);
+
   try {
     // Verificar el código de verificación ingresado por el usuario
     const verificationCheck = await client.verify.services(verifySid).verificationChecks.create({
@@ -135,7 +135,43 @@ app.post('/verifyCode', async (req, res) => {
   }
 });
 
+app.get('/activaValidacion', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ error: 'El usuario no existe' });
+    }
 
+    // Actualizar los datos del usuario
+    user.validacion = "Activa";
+    await user.save();
+
+    res.send('Validació de 2 pasos activada');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al activar la validación de 2 pasos');
+  }
+});
+
+app.get('/desactivaValidacion', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ error: 'El usuario no existe' });
+    }
+
+    // Actualizar los datos del usuario
+    user.validacion = "Inactiva";
+    await user.save();
+
+    res.send('Validació de 2 pasos desactivada');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error al deasactivar la validación de 2 pasos');
+  }
+});
 
 
 app.use(express.json());
@@ -165,7 +201,8 @@ app.patch('/editPrompts/:id', Session, editPrompts);
 app.delete('/deletePrompts/:id', Session, deletePrompts);
 app.get('/obtenerPromptsXId/:id', obtenerPromptsXId);
 
-
+//Request de los Profile
+app.patch('/editProfile/:id', editProfile);
 
 app.listen(port, () => {
   console.log(`Servidor iniciado en http://localhost:${port}`);
