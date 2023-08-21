@@ -6,7 +6,7 @@ const express = require('express');
 
 
 const register = async (req, res) => {
-  const { name, email,phone, password } = req.body;
+  const { name, email, phone, password } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -37,7 +37,7 @@ const register = async (req, res) => {
   }
 }
 const createNewUser = async (req, res) => {
-  const { name, email,phone, password, role, estado, validacion } = req.body;
+  const { name, email, phone, password, role, estado, validacion } = req.body;
 
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
@@ -114,7 +114,7 @@ const checkAdminRole = (req, res, next) => {
 const edit = async (req, res) => {
 
   const userId = req.params.id;
-  const { name, email,phone, password, rol, estado } = req.body;
+  const { name, email, phone, password, rol, estado } = req.body;
 
   try {
     // Verificar si el usuario existe en la base de datos
@@ -148,8 +148,8 @@ const edit = async (req, res) => {
 const editProfile = async (req, res) => {
 
   const userId = req.params.id;
-  const { name, email, phone} = req.body;
-  console.log("datos nuevos: "+name, email, phone);
+  const { name, email, phone } = req.body;
+  console.log("datos nuevos: " + name, email, phone);
 
   try {
     // Verificar si el usuario existe en la base de datos
@@ -225,4 +225,34 @@ const obtenerXId = async (req, res) => {
 
 
 }
-module.exports = { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile };
+const changePasword = async (req, res) => {
+
+  const userId = req.params.id;
+  const { password, newPassword } = req.body;
+  
+  try {
+    // Verificar si el usuario existe en la base de datos
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'El usuario no existe' });
+    }
+    // Verificar si la contraseña es correcta
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    
+
+    await user.save();
+
+    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar la contraseña' });
+  }
+}
+module.exports = { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile, changePasword };

@@ -5,7 +5,7 @@ const cors = require('cors'); // Importa el módulo cors
 const app = express();
 const jwt = require('jsonwebtoken');
 const port = 3001;
-const { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile } = require("./controlers/userController");
+const { register, obtener, login, checkAdminRole, edit, deleteUser, createNewUser, obtenerXId, editProfile, changePasword } = require("./controlers/userController");
 const { Session } = require("./controlers/sessionController");
 //const {checkAdminRole, checkUserRole} = require ("./controlers/roleController");
 const { obtenerPrompts, createPrompts, editPrompts, deletePrompts, obtenerPromptsXId } = require("./controlers/promptsController");
@@ -203,6 +203,7 @@ app.get('/obtenerPromptsXId/:id', obtenerPromptsXId);
 
 //Request de los Profile
 app.patch('/editProfile/:id', editProfile);
+app.patch('/changePasword/:id', changePasword);
 
 app.listen(port, () => {
   console.log(`Servidor iniciado en http://localhost:${port}`);
